@@ -45,6 +45,13 @@ interface ComplexSchemaData {
   customers: Record<string, Customer>;
 }
 
+const arraySchema = [
+  {
+    orderId: string(),
+    orderDate: string(),
+  },
+];
+
 const complexSchema: ISchema<ComplexSchemaData> = {
   storeId: string(),
   customers: dynamicKeyObject<Customer>({
@@ -53,12 +60,7 @@ const complexSchema: ISchema<ComplexSchemaData> = {
       imageUrl: optionalString(),
     },
 
-    orderHistory: [
-      {
-        orderId: string(),
-        orderDate: string(),
-      },
-    ],
+    orderHistory: arraySchema,
   }),
 };
 
@@ -85,6 +87,14 @@ const complexData: ComplexSchemaData = {
       orderHistory: [],
     },
   },
+};
+
+const failingValidator = {
+  validate: () => false,
+};
+
+const testSchema = {
+  testField: failingValidator,
 };
 
 const defaultUserData: UserData = {
@@ -125,6 +135,11 @@ describe("Validator Library", () => {
     expect(result).toBe(true);
   });
 
+  it("should fail when data is not an object", () => {
+    const result = validate(userSchema, "not-an-object", "TopLevel");
+    expect(result).toBe(false);
+  });
+
   it("should validate user data with optional missing field", () => {
     const validData: UserData = {
       name: "Bob",
@@ -140,6 +155,57 @@ describe("Validator Library", () => {
       validData,
       "Valid User Data Without testNumber"
     );
+
+    expect(result).toBe(false);
+  });
+
+  it("should fail when schema is not an object", () => {
+    const result = validate(42, {}, "InvalidSchema");
+    expect(result).toBe(false);
+  });
+
+  it("should fail when validator returns false", () => {
+    const result = validate(testSchema, { testField: "test" }, "TestField");
+    expect(result).toBe(false);
+  });
+
+  it("should validate array with valid elements", () => {
+    const validData = [
+      { orderId: "123", orderDate: "2025-01-01" },
+      { orderId: "456", orderDate: "2025-01-02" },
+    ];
+
+    const result = validate(arraySchema, validData, "ArrayOfOrders");
+    expect(result).toBe(true);
+  });
+
+  it("should fail array if one element is invalid", () => {
+    const invalidData = [
+      { orderId: "123", orderDate: "2025-01-01" },
+      { orderId: 456, orderDate: "2025-01-02" }, // Wrong type
+    ];
+
+    const result = validate(arraySchema, invalidData, "ArrayOfOrdersInvalid");
+    expect(result).toBe(false);
+  });
+
+  it("should fail when data is not an array but schema requires it", () => {
+    const invalidData = {
+      orderId: "123",
+      orderDate: "2025-01-01",
+    };
+
+    const result = validate(arraySchema, invalidData, "ArrayOfOrdersInvalid");
+    expect(result).toBe(false);
+  });
+
+  it("should fail when data has extra keys", () => {
+    const data = {
+      ...defaultUserData,
+      extraKey: "oops",
+    };
+
+    const result = validate(userSchema, data, "User with Extra Key");
     expect(result).toBe(false);
   });
 

@@ -53,28 +53,56 @@ export function optionalNumber(): Validator<number | undefined> {
       value === undefined || typeof value === "number",
   };
 }
-
 export function validate<T>(
   sourceSchema: T,
   sourceData: any,
   initalParentKey: string
 ): sourceData is Infer<T> {
+  // if (typeof sourceSchema !== "object" || sourceSchema === null) {
+  //   return false;
+  // }
+
   let hasError = false;
 
   const returnFalse = (path: string, addtionalError: string) => {
     console.error(`${path} - ${addtionalError}`);
     hasError = true;
-
     return false;
   };
 
   const runner = (schema: T, data: any, path: string): data is Infer<T> => {
     if (hasError) return false;
-    // If we have a validate method, it is a validator and we run it.
+
+    // Case: schema is a Validator
     if (typeof (schema as any).validate === "function") {
       return (schema as Validator<any, T>).validate(data, sourceData);
     }
 
+    // Case: schema is an array
+    if (Array.isArray(schema)) {
+      if (!Array.isArray(data)) {
+        return returnFalse(path, "Data is not an array");
+      }
+
+      if (schema.length === 0) return true; // Allow empty schema (edge case)
+      if (data.length === 0) return true; // Allow empty arrays
+
+      const itemSchema = schema[0];
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const succeeded = runner(itemSchema, item, `${path}[${i}]`);
+        if (!succeeded) {
+          return returnFalse(
+            `${path}[${i}]`,
+            `Validation failed for array item`
+          );
+        }
+      }
+
+      return true;
+    }
+
+    // Case: schema is a nested object
     if (typeof schema === "object" && schema !== null) {
       if (typeof data !== "object" || data === null) {
         return returnFalse(path, "Data is not an object");
@@ -83,12 +111,9 @@ export function validate<T>(
       const schemaKeys = Object.keys(schema);
       const dataKeys = Object.keys(data);
 
-      // We need more length to validate.
-      if (dataKeys.some((key) => !schemaKeys.includes(key)))
+      if (dataKeys.some((key) => !schemaKeys.includes(key))) {
         return returnFalse(path, "Invalid keys in data");
-
-      // Allow empty arrays
-      if (Array.isArray(schema) && data.length === 0) return true;
+      }
 
       for (const key of schemaKeys) {
         if (hasError) return false;
@@ -104,10 +129,11 @@ export function validate<T>(
           return returnFalse(`${path}.${key}`, `Validation failed for ${key}`);
         }
       }
-      return !hasError;
+
+      return true;
     }
 
-    returnFalse(path, "Schema is not an object");
+    return returnFalse(path, "Schema is not an object");
   };
 
   return runner(sourceSchema, sourceData, initalParentKey);
