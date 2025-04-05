@@ -1,7 +1,6 @@
 # @flemminghansen/validator
 
 [![npm version](https://img.shields.io/npm/v/@flemminghansen/validator.svg)](https://www.npmjs.com/package/@flemminghansen/validator)
-[![Build Status](https://img.shields.io/travis/flemminghansen/validator.svg)](https://travis-ci.org/flemminghansen/validator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > A lightweight, extensible validation library for Node.js and the browser.
