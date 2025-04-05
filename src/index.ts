@@ -112,3 +112,19 @@ export function validate<T>(
 
   return runner(sourceSchema, sourceData, initalParentKey);
 }
+
+export function dynamicKeyObject<T extends { [key: string]: any }>(
+  schema: ISchema<T>
+): Validator<{ [key: string]: Infer<T> }> {
+  return {
+    validate: (value: any): value is { [key: string]: Infer<T> } => {
+      if (typeof value !== "object" || value === null) return false;
+
+      const keys = Object.keys(value);
+
+      return keys.every((key) => {
+        return validate(schema, value[key], `dynamicKeyObject: ${key}`);
+      });
+    },
+  };
+}
