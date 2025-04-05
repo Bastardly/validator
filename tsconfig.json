@@ -12,6 +12,7 @@
 		"declaration": true,
 		"noEmit": false,
 		"noImplicitAny": true,
+		"esModuleInterop": true,
 		"strict": false,
 		"typeRoots": [
 			"./node_modules/@types",
