@@ -58,26 +58,6 @@ export function boolean(): Validator<boolean> {
   };
 }
 
-export function optionalBoolean(): Validator<boolean> {
-  return {
-    validate: (value: any): value is boolean | undefined =>
-      value === undefined || typeof value === "boolean",
-  };
-}
-
-export function optionalString(): Validator<string | undefined> {
-  return {
-    validate: (value: any): value is string | undefined =>
-      value === undefined || typeof value === "string",
-  };
-}
-
-export function optionalNumber(): Validator<number | undefined> {
-  return {
-    validate: (value: any): value is number | undefined =>
-      value === undefined || typeof value === "number",
-  };
-}
 export function validate<T>(
   sourceSchema: T,
   sourceData: any,

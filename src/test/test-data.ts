@@ -2,9 +2,6 @@ import {
   string,
   number,
   boolean,
-  optionalBoolean,
-  optionalNumber,
-  optionalString,
   type ISchema,
   dynamicKeyObject,
   optional,
@@ -25,9 +22,9 @@ export const userSchema: ISchema<UserData> = {
   name: string(),
   age: number(),
   isTested: boolean(),
-  bio: optionalString(),
-  isVerified: optionalBoolean(),
-  testNumber: optionalNumber(),
+  bio: optional(string()),
+  isVerified: optional(boolean()),
+  testNumber: optional(number()),
 };
 
 export interface Customer {
@@ -58,7 +55,7 @@ export const complexSchema: ISchema<ComplexSchemaData> = {
   customers: dynamicKeyObject<Customer>({
     info: {
       username: string(),
-      imageUrl: optionalString(),
+      imageUrl: optional(string()),
     },
 
     orderHistory: arraySchema,
