@@ -1,10 +1,4 @@
-import {
-  validate,
-  string,
-  boolean,
-  type ISchema,
-  dynamicKeyObject,
-} from "../src";
+import { validate, string, boolean, type ISchema, dynamicKeyObject } from "..";
 import {
   defaultUserData,
   userSchema,

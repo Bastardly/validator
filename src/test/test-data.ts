@@ -7,7 +7,7 @@ import {
   optionalString,
   type ISchema,
   dynamicKeyObject,
-} from "../src";
+} from "..";
 
 export interface UserData {
   name: string;
