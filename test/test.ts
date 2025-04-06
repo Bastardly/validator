@@ -1,110 +1,21 @@
 import {
   validate,
   string,
-  number,
   boolean,
-  optionalBoolean,
-  optionalNumber,
-  optionalString,
   type ISchema,
   dynamicKeyObject,
-} from "./src";
-
-interface UserData {
-  name: string;
-  age: number;
-  isTested: boolean;
-  bio?: string;
-  isVerified?: boolean;
-  testNumber?: number;
-}
-
-// Define a simple schema for our tests
-const userSchema: ISchema<UserData> = {
-  name: string(),
-  age: number(),
-  isTested: boolean(),
-  bio: optionalString(),
-  isVerified: optionalBoolean(),
-  testNumber: optionalNumber(),
-};
-
-interface Customer {
-  info: {
-    username: string;
-    imageUrl?: string;
-  };
-  orderHistory: {
-    orderId: string;
-    orderDate: string;
-  }[];
-}
-
-interface ComplexSchemaData {
-  storeId: string;
-  customers: Record<string, Customer>;
-}
-
-const arraySchema = [
-  {
-    orderId: string(),
-    orderDate: string(),
-  },
-];
-
-const complexSchema: ISchema<ComplexSchemaData> = {
-  storeId: string(),
-  customers: dynamicKeyObject<Customer>({
-    info: {
-      username: string(),
-      imageUrl: optionalString(),
-    },
-
-    orderHistory: arraySchema,
-  }),
-};
-
-const complexData: ComplexSchemaData = {
-  storeId: "123",
-  customers: {
-    customer1: {
-      info: {
-        username: "JohnDoe",
-        imageUrl: "/images/image.jpg",
-      },
-      orderHistory: [
-        {
-          orderId: "789",
-          orderDate: "2024-10-01",
-        },
-      ],
-    },
-    customer2: {
-      info: {
-        username: "JaneDoe",
-        imageUrl: undefined,
-      },
-      orderHistory: [],
-    },
-  },
-};
-
-const failingValidator = {
-  validate: () => false,
-};
-
-const testSchema = {
-  testField: failingValidator,
-};
-
-const defaultUserData: UserData = {
-  name: "Alice",
-  age: 28,
-  bio: "Software developer",
-  isTested: true,
-  isVerified: false,
-  testNumber: 42,
-};
+} from "../src";
+import {
+  defaultUserData,
+  userSchema,
+  complexData,
+  complexSchema,
+  arraySchema,
+  testSchema,
+  data,
+  type IData,
+  type UserData,
+} from "./test-data";
 
 describe("Validator Library", () => {
   // Mock console.error to avoid cluttering test output
@@ -246,6 +157,16 @@ describe("Validator Library", () => {
 
     const result = validate(complexSchema, invalidData, "Invalid Complex Data");
     expect(result).toBe(false);
+  });
+
+  it("should be able to accept schemas passed to dynamicKeyObject", () => {
+    const schema: ISchema<IData> = {
+      storeId: string(),
+      customers: dynamicKeyObject<boolean>(boolean()),
+      names: dynamicKeyObject<string>(string()),
+    };
+    const result = validate(schema, data, "DynamicKeyObject");
+    expect(result).toBe(true);
   });
 
   consoleSpy.mockRestore(); // Restore after test
