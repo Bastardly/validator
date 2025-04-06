@@ -19,10 +19,13 @@
       - [Example](#example)
     - [Custom Validator](#custom-validator)
       - [Example](#example-1)
+  - [Optional validator options](#optional-validator-options)
+    - [Optional options: IOptionalOptions = {}](#optional-options-ioptionaloptions--)
+      - [Example](#example-2)
   - [More complex data types](#more-complex-data-types)
     - [dynamicKeyObject](#dynamickeyobject)
     - [Caveat on array of objects.](#caveat-on-array-of-objects)
-    - [Example](#example-2)
+    - [Example](#example-3)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -81,7 +84,8 @@ import {
     validate,
     string, 
     number, 
-    optionalString,
+    optional
+    string,
     type ISchema,
 } from "@flemminghansen/validator";
 
@@ -100,7 +104,7 @@ const mySchema: ISchema<SchemaData> = {
   age: number(),
   location: {
     country: string(),
-    city: optionalString(),
+    city: optional(string()),
   },
 };
 
@@ -109,7 +113,6 @@ const mySchema: ISchema<SchemaData> = {
     age: 30,
     location: {
       country: "France",
-      city: undefined, // <-- Optional fields must have a key
     },
   };
 
@@ -185,6 +188,42 @@ console.log(isJaneValid); // true
 console.log(isBobValid); // false
 ```
 
+## Optional validator options
+The optional validator accepts all falsy data except zero as true. Meaning, if you pass undefined, null or NaN, validators wrapped in the optional validator will pass.
+
+However, if you need a more strict validation, you can pass an options object as a second parameter.
+If your value otherwise is falsy, the value is passed to the passed validator
+
+### Optional options: IOptionalOptions = {}
+  - disallowNull?: boolean;
+  - disallowNaN?: boolean;
+
+#### Example 
+``` TypeScript
+const schemaDefaultOptions: ISchema<IOptionsData> = {
+  age: optional(number()),
+};
+
+console.log(validate(schemaDefaultOptions, { age: 0 }, "age zero")); // true
+console.log(
+  validate(schemaDefaultOptions, { age: undefined }, "age undefined")
+); // true
+console.log(validate(schemaDefaultOptions, { age: null }, "age null")); // true
+console.log(validate(schemaDefaultOptions, { age: NaN }, "age NaN")); // true
+
+const schemaWithOptions: ISchema<IOptionsData> = {
+  age: optional(number(), {
+    disallowNaN: true,
+    disallowNull: true,
+  }),
+};
+
+console.log(validate(schemaWithOptions, { age: 0 }, "age zero")); // true
+console.log(validate(schemaWithOptions, { age: undefined }, "age undefined")); // true
+console.log(validate(schemaWithOptions, { age: null }, "age null")); // false
+console.log(validate(schemaWithOptions, { age: NaN }, "age NaN")); // false
+```
+
 ## More complex data types
 
 Let's look at a more complex example, and look at some of the caveats and possibilities.
@@ -206,7 +245,7 @@ interface Customer {
     username: string;
     imageUrl?: string;
   };
-  orderHistory: {
+  orderHistory?: {
     orderId: string;
     orderDate: string;
   }[];
@@ -222,15 +261,15 @@ const complexSchema: ISchema<ComplexSchemaData> = {
   customers: dynamicKeyObject<Customer>({
     info: {
       username: string(),
-      imageUrl: optionalString(),
+      imageUrl: optional(string()),
     },
 
-    orderHistory: [
+    orderHistory: optional([
       {
         orderId: string(),
         orderDate: string(),
       },
-    ],
+    ]),
   }),
 };
 
@@ -252,9 +291,13 @@ const complexData: ComplexSchemaData = {
     customer2: {
       info: {
         username: "JaneDoe",
-        imageUrl: undefined,
       },
       orderHistory: [],
+    },
+    customer3: {
+      info: {
+        username: "BobDoe",
+      },
     },
   },
 };
