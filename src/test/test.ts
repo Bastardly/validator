@@ -9,6 +9,10 @@ import {
   data,
   type IData,
   type UserData,
+  OptionalData,
+  optionalDataSchema,
+  requiredUserData,
+  getOptionsDataSchema,
 } from "./test-data";
 
 describe("Validator Library", () => {
@@ -46,22 +50,13 @@ describe("Validator Library", () => {
   });
 
   it("should validate user data with optional missing field", () => {
-    const validData: UserData = {
-      name: "Bob",
-      age: 28,
-      bio: "Software developer",
-      isTested: true,
-      isVerified: false,
-      // testNumber is omitted
-    };
-
     const result = validate(
       userSchema,
-      validData,
-      "Valid User Data Without testNumber"
+      requiredUserData,
+      "Only valid required data"
     );
 
-    expect(result).toBe(false);
+    expect(result).toBe(true);
   });
 
   it("should fail when schema is not an object", () => {
@@ -161,6 +156,58 @@ describe("Validator Library", () => {
     };
     const result = validate(schema, data, "DynamicKeyObject");
     expect(result).toBe(true);
+  });
+
+  it("should not fail when data is optional, and there are no data or key", () => {
+    const validData1: OptionalData = {
+      name: "John",
+      requiredArray: [123],
+      requiredObject: {
+        nickName: "bob",
+      },
+    };
+    const validData2: OptionalData = {
+      name: "Jane",
+      requiredArray: [123, 424],
+      requiredObject: {
+        nickName: "bob",
+      },
+      age: undefined,
+      optionalArray: undefined,
+      optionalObject: undefined,
+    };
+
+    const result1 = validate(
+      optionalDataSchema,
+      validData1,
+      "optionalDataSchema"
+    );
+    expect(result1).toBe(true);
+    const result2 = validate(
+      optionalDataSchema,
+      validData2,
+      "optionalDataSchema2"
+    );
+    expect(result2).toBe(true);
+  });
+
+  it("should handle optional options correctly when value is falsy", () => {
+    const schema = getOptionsDataSchema();
+    expect(validate(schema, { age: 0 }, "age zero")).toBe(true);
+    expect(validate(schema, { age: undefined }, "age undefined")).toBe(true);
+    expect(validate(schema, { age: null }, "age null")).toBe(true);
+    expect(validate(schema, { age: NaN }, "age NaN")).toBe(true);
+  });
+
+  it("should handle optional options correctly when value is falsy, but when values are disallowed", () => {
+    const schema = getOptionsDataSchema({
+      disallowNaN: true,
+      disallowNull: true,
+    });
+    expect(validate(schema, { age: 0 }, "age zero")).toBe(true);
+    expect(validate(schema, { age: undefined }, "age undefined")).toBe(true);
+    expect(validate(schema, { age: null }, "age null")).toBe(false);
+    expect(validate(schema, { age: NaN }, "age NaN")).toBe(false);
   });
 
   consoleSpy.mockRestore(); // Restore after test

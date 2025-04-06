@@ -15,6 +15,31 @@ export type ISchema<T> = {
   [K in keyof T]: Validator<T[K]> | ISchema<T[K]>;
 };
 
+export interface IOptionalOptions {
+  disallowNull?: boolean;
+  disallowNaN?: boolean;
+}
+
+export function optional<T, S>(
+  schema: ISchema<T> | Validator<T>,
+  options: IOptionalOptions = {}
+): Validator<T> {
+  return {
+    validate: (value: any, sourceData: S): value is T => {
+      if (value === undefined) return true;
+      if (value === null) return !options.disallowNull;
+      if (typeof value === "number" && Number.isNaN(value))
+        return !options.disallowNaN;
+
+      if ((schema as Validator<any, S>).validate) {
+        return (schema as Validator<any, S>).validate(value, sourceData);
+      }
+
+      return validate(schema, value, `optional field`);
+    },
+  };
+}
+
 export function string(): Validator<string> {
   return {
     validate: (value: any): value is string => typeof value === "string",
@@ -117,7 +142,7 @@ export function validate<T>(
 
       for (const key of schemaKeys) {
         if (hasError) return false;
-        if (!(key in data)) return returnFalse(path, `${key} is missing`);
+        // if (!(key in data)) return returnFalse(path, `${key} is missing`);
 
         const succeeded = runner(
           (schema as any)[key],

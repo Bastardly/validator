@@ -7,6 +7,8 @@ import {
   optionalString,
   type ISchema,
   dynamicKeyObject,
+  optional,
+  IOptionalOptions,
 } from "..";
 
 export interface UserData {
@@ -96,9 +98,14 @@ export const testSchema = {
   testField: failingValidator,
 };
 
-export const defaultUserData: UserData = {
+export const requiredUserData: UserData = {
   name: "Alice",
   age: 28,
+  isTested: true,
+};
+
+export const defaultUserData: UserData = {
+  ...requiredUserData,
   bio: "Software developer",
   isTested: true,
   isVerified: false,
@@ -126,3 +133,39 @@ export const data: IData = {
     customer2: "Jane",
   },
 };
+
+export interface OptionalData {
+  name: string;
+  age?: number;
+  requiredObject: {
+    nickName: string;
+  };
+  optionalObject?: {
+    nickName: string;
+  };
+  requiredArray: number[];
+  optionalArray?: number[];
+}
+
+export const optionalDataSchema: ISchema<OptionalData> = {
+  name: string(),
+  age: optional(number()),
+  requiredObject: {
+    nickName: string(),
+  },
+  requiredArray: [number()],
+  optionalObject: optional({
+    nickName: string(),
+  }),
+  optionalArray: optional([number()]),
+};
+
+export interface IOptionsData {
+  age?: number;
+}
+
+export const getOptionsDataSchema = (
+  options?: IOptionalOptions
+): ISchema<IOptionsData> => ({
+  age: optional(number(), options),
+});
