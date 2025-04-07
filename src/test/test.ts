@@ -1,4 +1,11 @@
-import { validate, string, boolean, type ISchema, dynamicKeyObject } from "..";
+import {
+  validate,
+  string,
+  boolean,
+  number,
+  type ISchema,
+  dynamicKeyObject,
+} from "..";
 import {
   defaultUserData,
   userSchema,
@@ -208,6 +215,66 @@ describe("Validator Library", () => {
     expect(validate(schema, { age: undefined }, "age undefined")).toBe(true);
     expect(validate(schema, { age: null }, "age null")).toBe(false);
     expect(validate(schema, { age: NaN }, "age NaN")).toBe(false);
+  });
+
+  it("should handle correct arrays correctly", () => {
+    const schema = {
+      stringArray: [string()],
+      numberArray: [number()],
+      booleanArray: [boolean()],
+    };
+    expect(
+      validate(
+        schema,
+        {
+          stringArray: ["a", "b"],
+          numberArray: [0, 2, -2, 2.22, -2.22],
+          booleanArray: [true, false],
+        },
+        "Basic arrays"
+      )
+    ).toBe(true);
+  });
+
+  it("should handle incorrect arrays correctly", () => {
+    const schema = {
+      stringArray: [string()],
+      numberArray: [number()],
+      booleanArray: [boolean()],
+    };
+    expect(
+      validate(
+        schema,
+        {
+          stringArray: ["a", 2],
+          numberArray: [0, 2, -2, 2.22, -2.22],
+          booleanArray: [true, false],
+        },
+        "Basic arrays"
+      )
+    ).toBe(false);
+    expect(
+      validate(
+        schema,
+        {
+          stringArray: ["a", "b"],
+          numberArray: [0, 2, -2, "2.22", -2.22],
+          booleanArray: [true, false],
+        },
+        "Basic arrays"
+      )
+    ).toBe(false);
+    expect(
+      validate(
+        schema,
+        {
+          stringArray: ["a", "b"],
+          numberArray: [0, 2, -2, 2.22, -2.22],
+          booleanArray: [true, false, null],
+        },
+        "Basic arrays"
+      )
+    ).toBe(false);
   });
 
   consoleSpy.mockRestore(); // Restore after test
